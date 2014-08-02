@@ -159,7 +159,11 @@ namespace NHibernate.Impl
 			}
 		}
 
-		public abstract IList ListFilter(object collection, string filter, QueryParameters parameters);
+
+	    public abstract void Scroll(CriteriaImpl criteria, out IScrollableResults scrollableResult);
+	   
+
+	    public abstract IList ListFilter(object collection, string filter, QueryParameters parameters);
 		public abstract IList<T> ListFilter<T>(object collection, string filter, QueryParameters parameters);
 		public abstract IEnumerable EnumerableFilter(object collection, string filter, QueryParameters parameters);
 		public abstract IEnumerable<T> EnumerableFilter<T>(object collection, string filter, QueryParameters parameters);

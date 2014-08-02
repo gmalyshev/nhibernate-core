@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NHibernate.Criterion;
+using NHibernate.Engine;
 using NHibernate.SqlCommand;
 using NHibernate.Transform;
 
@@ -357,6 +358,12 @@ namespace NHibernate
 		/// Strongly-typed version of <see cref="List()" />.
 		/// </summary>
 		IList<T> List<T>();
+
+        /// <summary>
+        ///  Fetching  selection as IScrollResult
+        /// </summary>
+        /// <returns></returns>
+        IScrollableResults Scroll();
 
 		/// <summary>
 		/// Strongly-typed version of <see cref="UniqueResult()" />.

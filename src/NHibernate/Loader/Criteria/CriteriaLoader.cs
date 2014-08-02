@@ -31,11 +31,13 @@ namespace NHibernate.Loader.Criteria
 		private readonly bool[] includeInResultRow;
 		private readonly int resultRowLength;
 
-		public CriteriaLoader(IOuterJoinLoadable persister, ISessionFactoryImplementor factory, CriteriaImpl rootCriteria,
+        public CriteriaLoader(IOuterJoinLoadable persister, ISessionFactoryImplementor factory,
+                              CriteriaImpl rootCriteria,
 							  string rootEntityName, IDictionary<string, IFilter> enabledFilters)
 			: base(factory, enabledFilters)
 		{
-			translator = new CriteriaQueryTranslator(factory, rootCriteria, rootEntityName, CriteriaQueryTranslator.RootSqlAlias);
+            translator = new CriteriaQueryTranslator(factory, rootCriteria, rootEntityName,
+                                                     CriteriaQueryTranslator.RootSqlAlias);
 
 			querySpaces = translator.GetQuerySpaces();
 
@@ -116,12 +118,12 @@ namespace NHibernate.Loader.Criteria
 				IType[] types = translator.ProjectedTypes;
 				result = new object[types.Length];
 				string[] columnAliases = translator.ProjectedColumnAliases;
-				
+
 				for (int i = 0, position = 0; i < result.Length; i++)
 				{
 					int numColumns = types[i].GetColumnSpan(session.Factory);
-					
-					if ( numColumns > 1 ) 
+
+                    if (numColumns > 1)
 					{
 						string[] typeColumnAliases = ArrayHelper.Slice(columnAliases, position, numColumns);
 						result[i] = types[i].NullSafeGet(rs, typeColumnAliases, session, null);
@@ -166,7 +168,9 @@ namespace NHibernate.Loader.Criteria
 			}
 
 			Dictionary<string, LockMode> aliasedLockModes = new Dictionary<string, LockMode>();
-			Dictionary<string, string[]> keyColumnNames = dialect.ForUpdateOfColumns ? new Dictionary<string, string[]>() : null;
+            Dictionary<string, string[]> keyColumnNames = dialect.ForUpdateOfColumns
+                                                              ? new Dictionary<string, string[]>()
+                                                              : null;
 			string[] drivingSqlAliases = Aliases;
 			for (int i = 0; i < drivingSqlAliases.Length; i++)
 			{
@@ -212,9 +216,66 @@ namespace NHibernate.Loader.Criteria
 			return ResolveResultTransformer(resultTransformer).TransformList(results);
 		}
 
+
+        protected override object LoadSingleRow(IDataReader resultSet, ISessionImplementor session,
+                                                QueryParameters queryParameters, bool returnProxies)
+        {
+            return GetResult(base.LoadSingleRow(resultSet, session, queryParameters, returnProxies),
+                             queryParameters.ResultTransformer);
+        }
+
+        public object ExternalReadRow(ISessionImplementor session, IDataReader resultSet, bool returnProxies)
+        {
+            using (new SessionIdLoggingContext(session.SessionId))
+            {
+                return LoadSingleRow(resultSet, session, translator.GetQueryParameters(),
+                                     returnProxies);
+            }
+        }
+
+        private object GetResult(object result, IResultTransformer customResultTransformer)
+        {
+            if (customResultTransformer == null)
+            {
+                // apply the defaut transformer of criteria aka RootEntityResultTransformer
+                return result;
+            }
+            var row = result as object[] ?? new object[] {result};
+            result = customResultTransformer.TransformTuple(row,
+                                                            translator.HasProjection
+                                                                ? translator.ProjectedAliases
+                                                                : userAliases);
+            return result;
+        }
+
 		protected override IEnumerable<IParameterSpecification> GetParameterSpecifications()
 		{
 			return translator.CollectedParameterSpecifications;
 		}
+
+	    /// <summary>
+	    /// Initialization IScrollableResult for Criterion
+	    /// </summary>
+	    public void ScrollableResult(ISessionImplementor session, ISessionImplementor externalsessionImpl,
+	        out IScrollableResults scrollableResult)
+	    {
+	        using (new SessionIdLoggingContext(externalsessionImpl.SessionId))
+	        {
+	            var queryParameters = translator.GetQueryParameters();
+	            RowSelection selection = queryParameters.RowSelection;
+	            int maxRows = HasMaxRows(selection) ? selection.MaxRows : int.MaxValue;
+
+	            IDbCommand st = PrepareQueryCommand(queryParameters, false, externalsessionImpl);
+
+	            IDataReader rs = GetResultSet(st, queryParameters.HasAutoDiscoverScalarTypes, queryParameters.Callable,
+	                selection,
+	                externalsessionImpl);
+
+
+	            ExternalDataReaderScrollableResultImp scrollableResultImp =
+	                new ExternalDataReaderScrollableResultImp(session, externalsessionImpl, rs, maxRows, this);
+	            scrollableResult = scrollableResultImp;
+	        }
+	    }
 	}
 }

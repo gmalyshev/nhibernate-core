@@ -263,7 +263,9 @@
     <Compile Include="Impl\CriteriaImpl.cs" />
     <Compile Include="Engine\EntityEntry.cs" />
     <Compile Include="Impl\EnumerableImpl.cs" />
+    <Compile Include="Impl\ExternalDataReaderScrollableResultImp.cs" />
     <Compile Include="Impl\FilterImpl.cs" />
+    <Compile Include="Impl\ListScrollableResultImp.cs" />
     <Compile Include="Impl\MessageHelper.cs" />
     <Compile Include="AdoNet\NonBatchingBatcher.cs" />
     <Compile Include="Impl\Printer.cs" />
@@ -277,6 +279,7 @@
     <Compile Include="InstantiationException.cs" />
     <Compile Include="Intercept\DefaultDynamicLazyFieldInterceptor.cs" />
     <Compile Include="IQuery.cs" />
+    <Compile Include="IScrollableResults.cs" />
     <Compile Include="ISession.cs" />
     <Compile Include="ISessionFactory.cs" />
     <Compile Include="ITransaction.cs" />

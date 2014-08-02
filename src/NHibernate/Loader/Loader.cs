@@ -275,7 +275,7 @@ namespace NHibernate.Loader
 		/// <param name="returnProxies">Should proxies be generated</param>
 		/// <returns>The loaded "row".</returns>
 		/// <exception cref="HibernateException" />
-		protected object LoadSingleRow(IDataReader resultSet, ISessionImplementor session, QueryParameters queryParameters,
+		protected virtual object LoadSingleRow(IDataReader resultSet, ISessionImplementor session, QueryParameters queryParameters,
 									   bool returnProxies)
 		{
 			int entitySpan = EntityPersisters.Length;
@@ -304,6 +304,8 @@ namespace NHibernate.Loader
 			return result;
 		}
 
+
+        
 		// Not ported: sequentialLoad, loadSequentialRowsForward, loadSequentialRowsReverse
 
 		internal static EntityKey GetOptionalObjectKey(QueryParameters queryParameters, ISessionImplementor session)

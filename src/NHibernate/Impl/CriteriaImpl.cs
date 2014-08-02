@@ -277,7 +277,22 @@ namespace NHibernate.Impl
 			return results;
 		}
 
-		public T UniqueResult<T>()
+	    public IScrollableResults Scroll()
+	    {
+            Before();
+	        try
+	        {
+	            IScrollableResults result = null;
+	            session.Scroll(this, out result);
+	            return result;
+	        }
+	        finally
+	        {
+	            After();
+	        }
+	    }
+
+	    public T UniqueResult<T>()
 		{
 			object result = UniqueResult();
 			if (result == null && typeof (T).IsValueType)
@@ -805,7 +820,12 @@ namespace NHibernate.Impl
 				return root.List<T>();
 			}
 
-			public T UniqueResult<T>()
+		    public IScrollableResults Scroll()
+		    {
+                return root.Scroll();
+		    }
+
+		    public T UniqueResult<T>()
 			{
 				object result = UniqueResult();
 				if (result == null && typeof (T).IsValueType)

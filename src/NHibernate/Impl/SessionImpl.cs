@@ -676,7 +676,76 @@ namespace NHibernate.Impl
 			}
 		}
 
-		public override IEnumerable Enumerable(IQueryExpression queryExpression, QueryParameters queryParameters)
+      
+        /// <summary>
+        /// This method is lazy loading data criteria
+        /// </summary>
+        /// <param name="criteria"></param>
+        /// <param name="scrollableResult"></param>
+        public override void Scroll(CriteriaImpl criteria, out IScrollableResults scrollableResult)
+        {
+            ListScrollableResultImp _scrollableResult = new ListScrollableResultImp(this,Factory);
+            scrollableResult = _scrollableResult;
+            using (new SessionIdLoggingContext(SessionId))
+            {
+               
+                CheckAndUpdateSessionStatus();
+
+                string[] implementors = Factory.GetImplementors(criteria.EntityOrClassName);
+                int size = implementors.Length;
+
+                CriteriaLoader[] loaders = new CriteriaLoader[size];
+                ISet<string> spaces = new HashSet<string>();
+                
+                for (int i = 0; i < size; i++)
+                {
+                    loaders[i] = new CriteriaLoader(
+                        GetOuterJoinLoadable(implementors[i]),
+                        Factory,
+                        criteria,
+                        implementors[i],
+                        enabledFilters
+                        );
+
+                    spaces.UnionWith(loaders[i].QuerySpaces);
+                }
+
+                AutoFlushIfRequired(spaces);
+
+                dontFlushFromFind++;
+
+                bool success = false;
+
+                try
+                {
+                    for (int i = size - 1; i >= 0; i--)
+                    {
+                        IScrollableResults result;
+                        loaders[i].ScrollableResult(this, _scrollableResult.GetSession(), out result);
+                        _scrollableResult.ScrollableResultses.Add(result);
+                        
+                    }
+                    success = true;
+                }
+                catch (HibernateException)
+                {
+                    _scrollableResult.Close();
+                    // Do not call Convert on HibernateExceptions
+                    throw;
+                }
+                catch (Exception sqle)
+                {
+                    throw Convert(sqle, "Unable to perform find");
+                }
+                finally
+                {
+                    dontFlushFromFind--;
+                    AfterOperation(success);
+                }
+            }
+        }
+
+	    public override IEnumerable Enumerable(IQueryExpression queryExpression, QueryParameters queryParameters)
 		{
 			using (new SessionIdLoggingContext(SessionId))
 			{
@@ -697,7 +766,9 @@ namespace NHibernate.Impl
 			}
 		}
 
-		// TODO: Scroll(string query, QueryParameters queryParameters)
+		
+
+        
 
 		public int Delete(string query)
 		{

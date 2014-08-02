@@ -86,7 +86,7 @@ namespace NHibernate.Test.Criteria
 			}
 		}
 
-		[Test, Ignore("ScrollableResults not implemented")]
+		[Test]
 		public void ScrollCriteria()
 		{
 			ISession session = OpenSession();
@@ -96,16 +96,30 @@ namespace NHibernate.Test.Criteria
 			course.CourseCode = "HIB";
 			course.Description = "Hibernate Training";
 			session.Save(course);
+            course = new Course();
+            course.CourseCode = "HIB2";
+            course.Description = "Hibernate Training1";
+            session.Save(course);
 			session.Flush();
 			session.Clear();
-			//IScrollableResults sr = session.CreateCriteria(typeof(Course)).Scroll();
-			//Assert.IsTrue( sr.Next() );
-			//course = (Course) sr[0];
-			Assert.IsNotNull(course);
-			//sr.Close();
-			session.Delete(course);
+            
+            session.Transaction.Commit();
+            session.Transaction.Begin();
+			IScrollableResults sr = session.CreateCriteria(typeof(Course)).Scroll();
+			Assert.IsTrue( sr.Next() );
+			course = (Course) sr.Get();
+			Assert.IsNotNull(course);		   
+            session.Flush();
+            session.Delete(course);
+            Assert.IsTrue(sr.Next());
+            course = (Course)sr.Get();
+            Assert.IsNotNull(course);
+            session.Delete(course);
+			sr.Close();
+			
 
-			t.Commit();
+			session.Transaction.Commit();
+            
 			session.Close();
 		}
 

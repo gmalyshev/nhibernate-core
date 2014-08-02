@@ -16,7 +16,7 @@ using NHibernate.Type;
 
 namespace NHibernate.Engine
 {
-	/// <summary>
+    /// <summary>
 	/// Defines the internal contract between the <c>Session</c> and other parts of NHibernate
 	/// such as implementors of <c>Type</c> or <c>ClassPersister</c>
 	/// </summary>
@@ -150,6 +150,14 @@ namespace NHibernate.Engine
 		/// Strongly-typed version of <see cref="Enumerable(IQueryExpression, QueryParameters)" />
 		/// </summary>
 		IEnumerable<T> Enumerable<T>(IQueryExpression query, QueryParameters queryParameters);
+
+       
+        /// <summary>
+        /// Execute scroll criteria
+        /// </summary>
+        /// <param name="criteria"></param>
+        /// <param name="scrollableResult"></param>
+        void Scroll(CriteriaImpl criteria, out IScrollableResults scrollableResult);
 
 		/// <summary>
 		/// Execute a filter

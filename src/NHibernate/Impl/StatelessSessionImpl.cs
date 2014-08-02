@@ -187,10 +187,16 @@ namespace NHibernate.Impl
 
 		public override IEnumerable<T> Enumerable<T>(IQueryExpression queryExpression, QueryParameters queryParameters)
 		{
-			throw new NotImplementedException();
+            throw new NotSupportedException();
 		}
 
-		public override IList ListFilter(object collection, string filter, QueryParameters parameters)
+	    public override void Scroll(CriteriaImpl criteria, out IScrollableResults scrollableResult)
+	    {
+            throw new NotSupportedException();
+	    }
+
+
+	    public override IList ListFilter(object collection, string filter, QueryParameters parameters)
 		{
 			throw new NotSupportedException();
 		}
